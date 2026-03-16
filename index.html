@@ -3,117 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Logic Engine</title>
+    <title>SnowDay AI | Founder Prototype</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-        body { background-color: #05070a; color: #f0f0f0; font-family: 'Outfit', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
-        .status-killed { border-color: #ff3b30; background: rgba(255, 59, 48, 0.05); box-shadow: 0 0 30px rgba(255, 59, 48, 0.1); }
-        .status-armed { border-color: #34c759; background: rgba(52, 199, 89, 0.05); box-shadow: 0 0 30px rgba(52, 199, 89, 0.1); }
-        input:focus { border-color: #3b82f6 !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; overflow-x: hidden; }
+        .iphone-frame { border: 12px solid #1c1c1e; border-radius: 50px; box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5); position: relative; background: #000; height: 780px; width: 360px; }
+        .dynamic-island { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; background: #000; border-radius: 20px; z-index: 100; }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; }
+        .status-active { border-color: #34c759; box-shadow: 0 0 20px rgba(52, 199, 89, 0.2); }
+        .status-killed { border-color: #ff3b30; box-shadow: 0 0 20px rgba(255, 59, 48, 0.2); }
+        input { background: rgba(255,255,255,0.08) !important; color: white !important; border: none !important; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
+<body class="min-h-screen flex items-center justify-center p-4 bg-zinc-950">
 
-    <div class="max-w-md w-full">
-        <div class="mb-8 text-center">
-            <h1 class="text-4xl font-black tracking-tighter italic">SNOWDAY <span class="text-blue-500">AI</span></h1>
-            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] mt-2">v2.1 High-Performance Edition</p>
-        </div>
+    <div class="iphone-frame overflow-hidden flex flex-col">
+        <div class="dynamic-island"></div>
 
-        <div id="console-box" class="glass p-8 rounded-[40px] space-y-6 transition-all duration-500">
-            <div>
-                <label class="text-[10px] font-bold text-gray-500 uppercase ml-2">School Board Portal</label>
-                <input id="target-url" type="text" value="https://geoquery.npssts.ca/Alerts" 
-                       class="w-full bg-black/40 p-4 rounded-2xl mt-1 text-sm border border-white/10 outline-none transition-all">
-            </div>
+        <div class="flex-1 mt-10 p-6 flex flex-col space-y-6 scroll-hide overflow-y-auto">
+            
+            <header class="pt-4">
+                <h1 class="text-3xl font-bold tracking-tight">SnowDay <span class="text-blue-500 italic">Pro</span></h1>
+                <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-1">Universal Scanning Engine</p>
+            </header>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="glass-card p-5 space-y-4">
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-2">Bus #</label>
-                    <input id="bus-id" type="text" placeholder="Optional" 
-                           class="w-full bg-black/40 p-4 rounded-2xl mt-1 text-sm border border-white/10 outline-none">
+                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Board Portal URL</label>
+                    <input id="target-url" type="text" value="https://geoquery.npssts.ca/Alerts" 
+                           class="w-full p-3 rounded-xl text-xs outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
-                <div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase ml-2">Alarm Set</label>
-                    <input type="time" value="07:00" class="w-full bg-black/40 p-4 rounded-2xl mt-1 text-sm border border-white/10 outline-none text-gray-400">
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1">My Bus #</label>
+                        <input id="bus-id" type="text" placeholder="e.g. 123" class="w-full p-3 rounded-xl text-xs outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Alarm Time</label>
+                        <input id="alarm-time" type="time" value="07:00" class="w-full p-3 rounded-xl text-xs outline-none">
+                    </div>
+                </div>
+
+                <button id="run-btn" onclick="runUniversalScan()" 
+                        class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-blue-900/20">
+                    Sync & Arm Alarm
+                </button>
+            </div>
+
+            <div id="status-display" class="glass-card p-5 hidden flex-1 flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="engine-status" class="text-[10px] font-bold text-blue-500 uppercase">Engine Standby</span>
+                    <div id="loader" class="hidden w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                
+                <div id="console-output" class="text-[10px] font-mono text-gray-400 space-y-1 leading-normal flex-1">
+                    </div>
+
+                <div id="final-verdict" class="mt-4 pt-4 border-t border-white/5 hidden text-center">
+                    <p id="verdict-text" class="text-lg font-black italic uppercase"></p>
+                    <p id="verdict-sub" class="text-[10px] text-gray-500 mt-1"></p>
                 </div>
             </div>
 
-            <button onclick="executeLogic()" id="action-btn" 
-                    class="w-full bg-blue-600 p-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-500 active:scale-95 transition-all shadow-xl shadow-blue-900/20">
-                Sync & Run Engine
-            </button>
-
-            <div id="log-window" class="hidden space-y-2 pt-4 border-t border-white/5 font-mono text-[10px] text-gray-500">
-                <div id="log-content"></div>
-            </div>
+            <p class="text-[9px] text-center text-gray-600 font-medium">Powered by WebScraping.ai Residential Proxy</p>
         </div>
     </div>
 
     <script>
-        const API_KEY = 'e8e2f18c-513a-480d-b691-cbdbe9050598'; // Your specific key
-        const KEYWORDS = ["cancelled", "inclement weather", "not running", "closed", "emergency closure"];
+        const API_KEY = 'e8e2f18c-513a-480d-b691-cbdbe9050598';
+        const FAILSAFE_KEYWORDS = ["cancelled", "inclement weather", "not running", "closed", "emergency closure", "buses are cancelled"];
 
-        async function executeLogic() {
+        async function runUniversalScan() {
             const url = document.getElementById('target-url').value;
             const bus = document.getElementById('bus-id').value.trim();
-            const consoleBox = document.getElementById('console-box');
-            const logBox = document.getElementById('log-window');
-            const logContent = document.getElementById('log-content');
-            const btn = document.getElementById('action-btn');
+            const log = document.getElementById('console-output');
+            const display = document.getElementById('status-display');
+            const verdict = document.getElementById('final-verdict');
+            const verdictText = document.getElementById('verdict-text');
+            const verdictSub = document.getElementById('verdict-sub');
+            const btn = document.getElementById('run-btn');
+            const loader = document.getElementById('loader');
 
-            // 1. Initializing
-            logBox.classList.remove('hidden');
-            logContent.innerHTML = `<span class="text-blue-500">>></span> Initializing WebScraping.ai Stealth Engine...<br>`;
-            btn.innerText = "SCANNING...";
+            // 1. Reset UI
+            display.classList.remove('hidden');
+            display.className = "glass-card p-5 flex-1 flex flex-col";
+            verdict.classList.add('hidden');
+            log.innerHTML = `<span class="text-blue-500">></span> Initializing Secure Tunnel...<br>`;
             btn.disabled = true;
+            loader.classList.remove('hidden');
+            document.getElementById('engine-status').innerText = "Scanning Site...";
 
             try {
-                // 2. Pro Scraper Fetch (Bypassing school board firewalls)
-                const fetchUrl = `https://api.webscraping.ai/v1/get?api_key=${API_KEY}&url=${encodeURIComponent(url)}`;
-                const response = await fetch(fetchUrl);
+                // 2. Fetch via WebScraping.ai with JS Rendering enabled
+                const apiCall = `https://api.webscraping.ai/v1/get?api_key=${API_KEY}&url=${encodeURIComponent(url)}&render_js=true&proxy_type=premium&timeout=20000`;
+                const response = await fetch(apiCall);
                 
-                if (!response.ok) throw new Error("Connection Refused");
+                if (!response.ok) throw new Error("Portal Unreachable");
                 
                 const html = (await response.text()).toLowerCase();
-                logContent.innerHTML += `<span class="text-blue-500">>></span> Remote data synchronized.<br>`;
+                log.innerHTML += `<span class="text-blue-500">></span> Remote portal data sync complete.<br>`;
 
-                let cancellationDetected = false;
+                let isCancelled = false;
 
-                // 3. Logic: Bus-Specific vs. Global
+                // 3. Logic Engine: Bus Number vs Global
                 if (bus) {
-                    logContent.innerHTML += `<span class="text-blue-500">>></span> Targeting Bus ${bus} data points...<br>`;
+                    log.innerHTML += `<span class="text-blue-500">></span> Filtering for Bus ID: ${bus}<br>`;
                     if (html.includes(bus)) {
                         const index = html.indexOf(bus);
-                        const context = html.substring(index, index + 300); // Analyze the 300 characters after the bus ID
-                        cancellationDetected = KEYWORDS.some(word => context.includes(word));
+                        const context = html.substring(index, index + 350); // Analyze the surrounding code
+                        isCancelled = FAILSAFE_KEYWORDS.some(word => context.includes(word));
+                        
+                        if (isCancelled) {
+                            log.innerHTML += `<span class="text-red-500">></span> Match found: Route ${bus} is offline.<br>`;
+                        } else {
+                            log.innerHTML += `<span class="text-green-500">></span> Match found: Route ${bus} is active.<br>`;
+                        }
                     } else {
-                        logContent.innerHTML += `<span class="text-yellow-500">>></span> Bus ${bus} not listed. checking general alerts...<br>`;
-                        cancellationDetected = KEYWORDS.some(word => html.includes(word) && html.includes("all buses"));
+                        log.innerHTML += `<span class="text-gray-500">></span> Bus ${bus} not listed. Checking system-wide alerts...<br>`;
+                        isCancelled = FAILSAFE_KEYWORDS.some(word => html.includes(word) && html.includes("all buses"));
                     }
                 } else {
-                    logContent.innerHTML += `<span class="text-blue-500">>></span> Running global system scan...<br>`;
-                    cancellationDetected = KEYWORDS.some(word => html.includes(word));
+                    log.innerHTML += `<span class="text-blue-500">></span> Running general system-wide scan...<br>`;
+                    isCancelled = FAILSAFE_KEYWORDS.some(word => html.includes(word));
                 }
 
-                // 4. Killswitch / Armed States
+                // 4. Update UI with Verdict
                 setTimeout(() => {
-                    if (cancellationDetected) {
-                        consoleBox.className = "glass p-8 rounded-[40px] space-y-6 transition-all duration-500 status-killed";
-                        logContent.innerHTML += `<br><span class="text-red-500 font-black tracking-widest">[KILLSWITCH] CANCELLATION DETECTED. ALARM DISABLED.</span>`;
-                        btn.innerText = "ALARM KILLED";
+                    loader.classList.add('hidden');
+                    verdict.classList.remove('hidden');
+                    
+                    if (isCancelled) {
+                        display.classList.add('status-killed');
+                        document.getElementById('engine-status').innerText = "Bus Cancelled";
+                        verdictText.innerText = "Sleep In";
+                        verdictText.className = "text-2xl font-black italic uppercase text-red-500";
+                        verdictSub.innerText = "Alarm successfully deactivated.";
+                        btn.innerText = "ALARM DISABLED";
                     } else {
-                        consoleBox.className = "glass p-8 rounded-[40px] space-y-6 transition-all duration-500 status-armed";
-                        logContent.innerHTML += `<br><span class="text-green-500 font-black tracking-widest">[READY] NO CANCELLATIONS. ALARM ARMED.</span>`;
+                        display.classList.add('status-armed');
+                        document.getElementById('engine-status').innerText = "Alarm Armed";
+                        verdictText.innerText = "Wake Up";
+                        verdictText.className = "text-2xl font-black italic uppercase text-green-500";
+                        verdictSub.innerText = "Normal schedule. No cancellations found.";
                         btn.innerText = "ALARM ACTIVE";
                     }
-                }, 1000);
+                }, 800);
 
             } catch (err) {
-                logContent.innerHTML += `<span class="text-red-500">>> FATAL ERROR: ${err.message}</span><br>`;
-                btn.innerText = "SYNC FAILED";
+                log.innerHTML += `<span class="text-red-500">> FATAL: ${err.message}</span><br>`;
+                document.getElementById('engine-status').innerText = "Scan Failed";
+                loader.classList.add('hidden');
+                btn.innerText = "RETRY SCAN";
             } finally {
                 btn.disabled = false;
             }
