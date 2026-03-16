@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Direct Autonomous Agent</title>
+    <title>SnowDay AI | Autonomous Search Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
       {
@@ -14,50 +14,47 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .iphone { border: 12px solid #1c1c1e; border-radius: 50px; width: 340px; height: 720px; background: #000; position: relative; margin: auto; border-bottom-width: 15px; }
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; }
-        .ai-pulse { animation: pulse 1.5s infinite; color: #3b82f6; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        body { background-color: #080808; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .iphone { border: 12px solid #1c1c1e; border-radius: 55px; width: 340px; height: 720px; background: #000; position: relative; margin: auto; box-shadow: 0 0 100px rgba(59, 130, 246, 0.1); }
+        .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 35px; }
+        .scanning { animation: scan 2s infinite ease-in-out; }
+        @keyframes scan { 0%, 100% { color: #3b82f6; opacity: 1; } 50% { color: #1d4ed8; opacity: 0.5; } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
 
-    <div class="iphone shadow-[0_0_50px_rgba(59,130,246,0.15)] flex flex-col">
-        <div class="p-8 space-y-6 flex-1 overflow-y-auto">
+    <div class="iphone flex flex-col overflow-hidden">
+        <div class="p-8 space-y-7 flex-1 overflow-y-auto">
             
-            <header class="text-center pt-4">
-                <div class="inline-block px-2 py-1 rounded bg-blue-500/10 text-blue-500 text-[8px] font-bold uppercase tracking-widest mb-1 border border-blue-500/20">Autonomous Mode</div>
-                <h1 class="text-3xl font-black italic tracking-tighter">SNOWDAY <span class="text-blue-500">AI</span></h1>
+            <header class="text-center pt-6">
+                <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[7px] font-black uppercase tracking-[0.3em] mb-2 border border-blue-500/20">Grounding Active</div>
+                <h1 class="text-4xl font-black italic tracking-tighter leading-none">SNOW<span class="text-blue-600 italic">AI</span></h1>
             </header>
 
-            <div class="glass p-5 space-y-4">
-                <div>
-                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Target Link</label>
-                    <input id="url" type="text" value="https://geoquery.npssts.ca/Alerts" 
-                           class="w-full bg-white/5 p-3 rounded-xl mt-1 text-xs outline-none focus:ring-1 focus:ring-blue-500 border border-white/5 transition-all">
+            <div class="glass p-6 space-y-5">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Location / Zone</label>
+                    <input id="loc" type="text" value="North Bay NPSSTS" class="w-full bg-white/5 p-4 rounded-2xl text-xs outline-none focus:ring-1 focus:ring-blue-500 border border-white/5">
                 </div>
-                <div>
-                    <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Bus Number</label>
-                    <input id="bus" type="text" placeholder="e.g. 123" 
-                           class="w-full bg-white/5 p-3 rounded-xl mt-1 text-xs outline-none border border-white/5">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Your Bus #</label>
+                    <input id="bus" type="text" placeholder="e.g. 123" class="w-full bg-white/5 p-4 rounded-2xl text-xs outline-none border border-white/5">
                 </div>
-                <button id="main-btn" onclick="runDirectAgent()" 
-                        class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95">
-                    Launch AI Scan
+                <button id="main-btn" onclick="executeAutonomousSearch()" class="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-[0_10px_20px_rgba(37,99,235,0.2)]">
+                    Analyze Live Web
                 </button>
             </div>
 
-            <div id="ai-status" class="hidden glass p-5 space-y-3">
+            <div id="ai-status" class="hidden glass p-6 space-y-4">
                 <div class="flex justify-between items-center">
-                    <span class="text-[10px] uppercase ai-pulse font-black tracking-tighter">Agent Browsing Live Web</span>
-                    <div id="loader" class="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-[9px] uppercase font-black scanning tracking-widest">Neural Link Searching</span>
+                    <div id="loader" class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <div id="log" class="text-[10px] font-mono text-gray-500 leading-relaxed italic"></div>
+                <div id="log" class="text-[10px] font-mono text-zinc-500 leading-relaxed italic space-y-1"></div>
                 
-                <div id="verdict" class="hidden pt-4 border-t border-white/5 text-center transition-all animate-in fade-in slide-in-from-bottom-2">
-                    <p id="decision" class="text-3xl font-black italic uppercase"></p>
-                    <p id="reasoning" class="text-[11px] text-gray-400 mt-2 leading-relaxed px-1"></p>
+                <div id="verdict" class="hidden pt-6 border-t border-white/10 text-center animate-in fade-in zoom-in-95 duration-500">
+                    <p id="decision" class="text-4xl font-black italic uppercase tracking-tighter"></p>
+                    <p id="reasoning" class="text-[11px] text-zinc-400 mt-3 leading-relaxed px-2 font-medium"></p>
                 </div>
             </div>
         </div>
@@ -66,12 +63,12 @@
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
-        // PURE GEMINI CONFIG (No scraper key used)
+        // AUTONOMOUS CONFIG
         const API_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
 
-        window.runDirectAgent = async () => {
-            const urlLink = document.getElementById('url').value;
-            const busNum = document.getElementById('bus').value;
+        window.executeAutonomousSearch = async () => {
+            const loc = document.getElementById('loc').value;
+            const bus = document.getElementById('bus').value;
             const log = document.getElementById('log');
             const statusBox = document.getElementById('ai-status');
             const verdict = document.getElementById('verdict');
@@ -79,45 +76,48 @@
 
             statusBox.classList.remove('hidden');
             verdict.classList.add('hidden');
-            log.innerHTML = `> Initializing Gemini Neural Core...<br>`;
+            log.innerHTML = `> Establishing Google Search Grounding...<br>`;
             btn.disabled = true;
 
             try {
                 const genAI = new GoogleGenerativeAI(API_KEY);
-                // Using 2.0 or 1.5 Flash which supports the URL context tool
+                // Enabling the Google Search tool allows the AI to "go out" and find info
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-1.5-flash",
-                    tools: [{ url_context: {} }] 
+                    tools: [{ googleSearch: {} }] 
                 });
 
-                log.innerHTML += `> Deploying agent to: ${urlLink}...<br>`;
-                log.innerHTML += `> AI is reading page content...<br>`;
+                log.innerHTML += `> Querying live bus alerts for ${loc}...<br>`;
+                log.innerHTML += `> AI is cross-referencing search results...<br>`;
 
-                const prompt = `Visit this URL: ${urlLink}. 
-                Read the bus alerts. Is Bus #${busNum || 'any school bus'} cancelled or delayed for today? 
-                Provide your answer strictly in this format:
+                // The prompt now forces the AI to use its search tool
+                const prompt = `Research the school bus cancellation status for ${loc} today, Monday, March 16, 2026. 
+                Is Bus #${bus || 'any school bus'} cancelled? Look for terms like 'busing cancelled', 'inclement weather', or 'route delays'.
+                
+                Provide your response exactly like this:
                 DECISION: [SLEEP or WAKE]
-                REASON: [One short sentence explaining what you found on the site]`;
+                REASON: [Explain exactly what you found in the search results regarding cancellations or current status]`;
 
                 const result = await model.generateContent(prompt);
-                const aiResponse = result.response.text();
+                const responseText = result.response.text();
 
-                log.innerHTML += `> Analysis complete. Closing connection.<br>`;
+                log.innerHTML += `> Decision logic finalized.<br>`;
 
-                // UI Processing
-                const isSleep = aiResponse.includes("SLEEP");
+                const isSleep = responseText.includes("SLEEP");
                 const decisionEl = document.getElementById('decision');
                 
                 decisionEl.innerText = isSleep ? "SLEEP IN" : "WAKE UP";
-                decisionEl.className = isSleep ? "text-3xl font-black text-red-500 italic" : "text-3xl font-black text-green-500 italic";
+                decisionEl.className = isSleep ? "text-4xl font-black text-red-500 italic" : "text-4xl font-black text-green-500 italic text-glow";
                 
-                document.getElementById('reasoning').innerText = aiResponse.split("REASON:")[1] || "AI confirmed schedule data.";
+                // Clean up the reason text
+                let reason = responseText.split("REASON:")[1] || "No alert data found for today.";
+                document.getElementById('reasoning').innerText = reason.trim();
                 
                 verdict.classList.remove('hidden');
                 document.getElementById('loader').classList.add('hidden');
 
             } catch (err) {
-                log.innerHTML += `<span class="text-red-500">> Connection Failed. Site might be blocking AI bots or key is limited.</span>`;
+                log.innerHTML += `<span class="text-red-500">> Neural failure: Link timed out.</span>`;
                 console.error(err);
             } finally {
                 btn.disabled = false;
