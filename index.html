@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Smart Alarm</title>
+    <title>SnowDay AI | Neural Guardian</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
       {
@@ -14,320 +14,190 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        body { background-color: #050505; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-        .app-container { border: 12px solid #1a1a1c; border-radius: 55px; width: 375px; height: 812px; background: #000; margin: 20px auto; position: relative; box-shadow: 0 20px 60px rgba(59, 130, 246, 0.1); overflow: hidden; display: flex; flex-direction: column; }
-        .glass-panel { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
-        .nav-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
-        
-        /* Custom Toggle Switch */
-        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
-        
-        /* Loading Animation */
-        .scan-line { width: 100%; height: 2px; background: #3b82f6; position: absolute; top: 0; left: 0; box-shadow: 0 0 10px #3b82f6; animation: scan 3s infinite; display: none; }
-        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        body { background-color: #020202; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        .app-shell { border: 8px solid #111; border-radius: 50px; width: 360px; height: 780px; background: #000; margin: 20px auto; position: relative; box-shadow: 0 0 80px rgba(59, 130, 246, 0.15); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
+        .scan-bar { height: 2px; width: 100%; background: linear-gradient(90deg, transparent, #3b82f6, transparent); position: absolute; top: 0; left: 0; animation: scan 2s infinite linear; display: none; }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .pulse-dot { width: 8px; height: 8px; background: #3b82f6; border-radius: 50%; display: inline-block; margin-right: 8px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-zinc-950">
 
-    <div class="app-container">
-        <div class="flex justify-between items-center p-6 pb-2">
-            <h1 class="text-xl font-extrabold tracking-tight">SnowDay<span class="text-blue-500">AI</span></h1>
-            <div class="text-xs font-semibold text-zinc-500" id="live-time">00:00 AM</div>
+    <div class="app-shell p-6 overflow-hidden">
+        <div class="flex justify-between items-center mb-6 px-2">
+            <span class="text-[10px] font-extrabold tracking-widest text-zinc-500 uppercase" id="live-date">MARCH 16, 2026</span>
+            <div id="clock" class="text-xs font-black text-blue-500">12:00 PM</div>
         </div>
 
-        <div class="flex px-6 space-x-6 border-b border-white/10 mb-6">
-            <button onclick="switchTab('home')" id="tab-home" class="nav-btn active pb-2 text-sm font-bold transition-colors">Alarm</button>
-            <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn pb-2 text-sm font-bold text-zinc-500 transition-colors">Settings</button>
+        <div class="glass p-8 mb-6 text-center relative overflow-hidden">
+            <div id="scanner" class="scan-bar"></div>
+            <input type="time" id="alarm-time" value="06:30" class="bg-transparent text-6xl font-black outline-none w-full text-center tracking-tighter [color-scheme:dark]">
+            <div class="mt-4 flex items-center justify-center">
+                <div id="status-dot" class="hidden pulse-dot"></div>
+                <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em]" id="status-text">Guardian Offline</p>
+            </div>
         </div>
 
-        <div id="view-home" class="flex-1 px-6 overflow-y-auto space-y-6 pb-10">
-            
-            <div class="glass-panel p-6 text-center relative overflow-hidden">
-                <div id="scanner" class="scan-line"></div>
-                <input type="time" id="alarm-time" value="06:30" class="bg-transparent text-5xl font-extrabold text-white outline-none w-full text-center tracking-tighter mb-2 [color-scheme:dark]">
-                <p class="text-xs text-zinc-400 font-semibold uppercase tracking-widest" id="alarm-status-text">Alarm Inactive</p>
-                
-                <div class="mt-6 flex justify-center items-center">
-                    <div class="relative inline-block w-16 h-8 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="toggle" id="alarm-toggle" class="toggle-checkbox absolute block w-8 h-8 rounded-full bg-white border-4 border-zinc-700 appearance-none cursor-pointer transition-transform duration-300 z-10"/>
-                        <label for="alarm-toggle" class="toggle-label block overflow-hidden h-8 rounded-full bg-zinc-800 cursor-pointer transition-colors duration-300"></label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div class="glass-panel p-4 flex flex-col space-y-2">
-                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Web Portal</label>
-                    <input type="text" id="target-url" value="https://geoquery.npssts.ca/Alerts" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
-                </div>
-                <div class="glass-panel p-4 flex flex-col space-y-2">
-                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Bus Number</label>
-                    <input type="text" id="target-bus" placeholder="e.g., 123" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
-                </div>
-            </div>
-
-            <div id="ai-verdict-box" class="glass-panel p-5 border border-blue-500/30 hidden animate-in fade-in slide-in-from-bottom-4">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">AI Verdict Log</span>
-                </div>
-                <p id="ai-decision" class="text-3xl font-black tracking-tighter"></p>
-                <p id="ai-reason" class="text-xs text-zinc-400 mt-2 leading-relaxed"></p>
-                <button onclick="stopAlarm()" id="stop-btn" class="hidden w-full mt-4 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl text-xs font-bold uppercase transition">Dismiss Alarm</button>
+        <div class="space-y-3 flex-1">
+            <div class="glass p-4">
+                <label class="text-[8px] font-black text-blue-500 uppercase tracking-widest block mb-1">Observation Zone</label>
+                <input type="text" id="city" value="North Bay, Ontario" class="bg-transparent text-sm font-bold w-full outline-none text-white focus:text-blue-400 transition">
             </div>
             
-            <button onclick="triggerAIAnalysis()" id="test-btn" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-colors active:scale-95">
-                Force AI Test Scan
+            <div class="glass p-4">
+                <label class="text-[8px] font-black text-blue-500 uppercase tracking-widest block mb-1">Target Route ID</label>
+                <input type="text" id="bus" placeholder="e.g. 154" class="bg-transparent text-sm font-bold w-full outline-none text-white focus:text-blue-400 transition">
+            </div>
+
+            <button onclick="toggleGuardian()" id="master-toggle" class="w-full py-5 rounded-3xl font-black text-xs uppercase tracking-widest border border-zinc-800 hover:border-blue-500 transition-all active:scale-95">
+                Enable Neural Guardian
             </button>
-        </div>
-
-        <div id="view-settings" class="flex-1 px-6 overflow-y-auto space-y-6 hidden pb-10">
-            <div class="flex items-center space-x-4 glass-panel p-4">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-lg font-bold">IT</div>
-                <div>
-                    <h3 class="font-bold text-sm">Isaac's Account</h3>
-                    <p class="text-xs text-zinc-500">Free Tier (Local Connection)</p>
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">System Preferences</h4>
-                <div class="glass-panel divide-y divide-white/5">
-                    <div class="p-4 flex justify-between items-center">
-                        <span class="text-sm font-semibold">Alarm Tone</span>
-                        <span class="text-xs text-zinc-400">Digital Pulse</span>
-                    </div>
-                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-white/5 transition" onclick="showPaywall()">
-                        <span class="text-sm font-semibold flex items-center gap-2">Deep Neural Scan <span class="bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full uppercase">Pro</span></span>
-                        <span class="text-xs text-zinc-400">Locked</span>
-                    </div>
-                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-white/5 transition" onclick="showPaywall()">
-                        <span class="text-sm font-semibold flex items-center gap-2">Track Multiple Buses <span class="bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full uppercase">Pro</span></span>
-                        <span class="text-xs text-zinc-400">Locked</span>
-                    </div>
-                </div>
+            
+            <div id="log-container" class="text-[8px] font-mono text-zinc-600 uppercase px-2 space-y-1 h-12 overflow-hidden">
+                <p id="last-scan">Waiting for activation...</p>
             </div>
         </div>
 
-        <div id="paywall" class="absolute inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex-col justify-end">
-            <div class="bg-zinc-900 border-t border-white/10 rounded-t-3xl p-8 transform transition-transform translate-y-full" id="paywall-content">
-                <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6"></div>
-                <h2 class="text-3xl font-black tracking-tight mb-2">Upgrade to <span class="text-blue-500 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SnowDay Pro</span></h2>
-                <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Unlock advanced AI routing, multiple bus tracking for siblings, and predictive weather alerts.</p>
-                
-                <div class="border border-blue-500/30 bg-blue-500/10 rounded-2xl p-4 mb-6 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 bg-blue-500 text-[9px] font-bold px-3 py-1 rounded-bl-xl uppercase">Best Value</div>
-                    <p class="text-2xl font-black">$19.99<span class="text-sm text-zinc-400 font-normal"> / year</span></p>
-                    <p class="text-xs text-blue-400 mt-1">Less than the cost of missing a shift.</p>
-                </div>
-
-                <button onclick="closePaywall()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/25 transition active:scale-95 mb-3">Subscribe Now</button>
-                <button onclick="closePaywall()" class="w-full py-4 text-xs font-semibold text-zinc-500 hover:text-white transition">Maybe Later</button>
+        <div id="verdict-panel" class="hidden glass p-6 border-t-2 border-blue-500/50 animate-in slide-in-from-bottom-10">
+            <div class="flex justify-between items-start mb-2">
+                <h2 id="verdict-title" class="text-3xl font-black italic tracking-tighter"></h2>
+                <span class="bg-blue-500/10 text-blue-500 text-[8px] font-black px-2 py-1 rounded">AI VERIFIED</span>
             </div>
+            <p id="verdict-reason" class="text-[10px] text-zinc-400 font-medium leading-relaxed mb-4"></p>
+            <button onclick="dismissAlarm()" id="dismiss-btn" class="hidden w-full bg-white text-black py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition">Kill Signal</button>
         </div>
-
     </div>
 
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
-        // BOTH KEYS INTEGRATED FOR FAIL-PROOF SCANNING
-        const GEMINI_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
-        const SCRAPER_KEY = "e8e2f18c-513a-480d-b691-cbdbe9050598";
-        
-        // Audio Context for the Alarm Sound
-        let audioCtx;
-        let oscillator;
-        let alarmInterval;
-        let isAlarmRinging = false;
+        const API_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
+        let guardianActive = false, alarmInterval, audioCtx, isRinging = false, scanTimer;
 
-        // UI Logic
-        window.switchTab = (tab) => {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-settings').classList.add('hidden');
-            document.getElementById('tab-home').classList.remove('active', 'text-blue-500');
-            document.getElementById('tab-home').classList.add('text-zinc-500');
-            document.getElementById('tab-settings').classList.remove('active', 'text-blue-500');
-            document.getElementById('tab-settings').classList.add('text-zinc-500');
-
-            document.getElementById(`view-${tab}`).classList.remove('hidden');
-            document.getElementById(`tab-${tab}`).classList.remove('text-zinc-500');
-            document.getElementById(`tab-${tab}`).classList.add('active', 'text-blue-500');
+        // UI Controls
+        window.toggleGuardian = () => {
+            guardianActive = !guardianActive;
+            const btn = document.getElementById('master-toggle');
+            const status = document.getElementById('status-text');
+            const dot = document.getElementById('status-dot');
+            
+            if(guardianActive) {
+                btn.className = "w-full py-5 rounded-3xl font-black text-xs uppercase tracking-widest bg-blue-600 text-white shadow-2xl shadow-blue-500/40 border-none";
+                btn.innerText = "Guardian Monitoring";
+                status.innerText = "Neural Scan: 120s intervals";
+                dot.classList.remove('hidden');
+                startScanningCycle();
+            } else {
+                btn.className = "w-full py-5 rounded-3xl font-black text-xs uppercase tracking-widest border border-zinc-800";
+                btn.innerText = "Enable Neural Guardian";
+                status.innerText = "Guardian Offline";
+                dot.classList.add('hidden');
+                clearTimeout(scanTimer);
+                dismissAlarm();
+            }
         };
 
-        window.showPaywall = () => {
-            const pw = document.getElementById('paywall');
-            const content = document.getElementById('paywall-content');
-            pw.classList.remove('hidden');
-            pw.classList.add('flex');
-            setTimeout(() => content.classList.remove('translate-y-full'), 10);
-        };
-
-        window.closePaywall = () => {
-            const pw = document.getElementById('paywall');
-            const content = document.getElementById('paywall-content');
-            content.classList.add('translate-y-full');
-            setTimeout(() => {
-                pw.classList.add('hidden');
-                pw.classList.remove('flex');
-            }, 300);
-        };
-
-        // Live Clock & Alarm Trigger
+        // Date/Time Display
         setInterval(() => {
             const now = new Date();
-            let hours = now.getHours();
-            let mins = now.getMinutes();
-            const ampm = hours >= 12 ? 'PM' : 'AM';
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('live-date').innerText = now.toDateString().toUpperCase();
             
-            const displayHours = hours % 12 || 12;
-            document.getElementById('live-time').innerText = `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`;
-
-            const toggle = document.getElementById('alarm-toggle');
-            if (toggle.checked && !isAlarmRinging) {
-                const alarmInput = document.getElementById('alarm-time').value; 
-                const current24 = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-                
-                if (current24 === alarmInput && !window.hasFiredToday) {
-                    window.hasFiredToday = true; 
-                    triggerAIAnalysis();
+            if(guardianActive && !isRinging) {
+                const current = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                if(current === document.getElementById('alarm-time').value && !window.firedToday) {
+                    window.firedToday = true;
+                    runIntelligenceAudit(true); // Final check at alarm time
                 }
             }
         }, 1000);
 
-        setInterval(() => {
-            const now = new Date();
-            if(now.getHours() === 0 && now.getMinutes() === 0) window.hasFiredToday = false;
-        }, 60000);
+        // Recursive Scan every 2 mins
+        function startScanningCycle() {
+            if(!guardianActive) return;
+            runIntelligenceAudit(false);
+            scanTimer = setTimeout(startScanningCycle, 120000); // 2 minutes
+        }
 
-        document.getElementById('alarm-toggle').addEventListener('change', (e) => {
-            const statusText = document.getElementById('alarm-status-text');
-            if(e.target.checked) {
-                statusText.innerText = "Monitoring Network...";
-                statusText.classList.add('text-blue-400');
-                statusText.classList.remove('text-zinc-400');
-                window.hasFiredToday = false;
-            } else {
-                statusText.innerText = "Alarm Inactive";
-                statusText.classList.remove('text-blue-400');
-                statusText.classList.add('text-zinc-400');
-                stopAlarm();
-            }
-        });
-
-        // THE BULLETPROOF SCAN ENGINE
-        window.triggerAIAnalysis = async () => {
-            const url = document.getElementById('target-url').value;
-            const bus = document.getElementById('target-bus').value || "any";
-            
-            const verdictBox = document.getElementById('ai-verdict-box');
-            const decisionTxt = document.getElementById('ai-decision');
-            const reasonTxt = document.getElementById('ai-reason');
+        async function runIntelligenceAudit(isFinal) {
+            const city = document.getElementById('city').value;
+            const bus = document.getElementById('bus').value || "All";
+            const panel = document.getElementById('verdict-panel');
+            const title = document.getElementById('verdict-title');
+            const reason = document.getElementById('verdict-reason');
             const scanner = document.getElementById('scanner');
-            const testBtn = document.getElementById('test-btn');
+            const log = document.getElementById('last-scan');
 
-            verdictBox.classList.remove('hidden');
-            decisionTxt.innerText = "SCRAPING...";
-            decisionTxt.className = "text-3xl font-black tracking-tighter text-blue-500 animate-pulse";
-            reasonTxt.innerText = `Bypassing firewall at ${url}. Extracting raw HTML...`;
+            log.innerText = `Scanning: ${new Date().toLocaleTimeString()}...`;
             scanner.style.display = 'block';
-            testBtn.disabled = true;
 
             try {
-                // STEP 1: Scrape the raw page using the proxy (guaranteed to connect)
-                const fetchUrl = `https://api.webscraping.ai/v1/get?api_key=${SCRAPER_KEY}&url=${encodeURIComponent(url)}&render_js=true&proxy_type=premium`;
-                const scraperResponse = await fetch(fetchUrl);
-                const htmlText = await scraperResponse.text();
+                const genAI = new GoogleGenerativeAI(API_KEY);
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash",
+                    tools: [{ googleSearch: {} }] 
+                });
 
-                decisionTxt.innerText = "ANALYZING...";
-                reasonTxt.innerText = `Data extracted. Feeding to Gemini Neural Core for logic processing...`;
+                const prompt = `CONTEXT: You are a high-reliability alarm assistant for a student in ${city}.
+                CURRENT DATE: ${new Date().toDateString()}.
+                TARGET: Bus #${bus}.
 
-                // Strip out the massive HTML code blocks to save tokens and speed up the AI
-                const cleanText = htmlText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().substring(0, 15000);
-
-                // STEP 2: Gemini reasoning logic
-                const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-                const prompt = `You are an automated alarm clock logic engine. Read this raw text scraped from a school transportation portal:
-                ---
-                ${cleanText}
-                ---
-                Task: We are looking for the status of Bus #${bus}.
-                Apply these strict rules in order:
-                1. If the text says "ALL buses", "All transportation", or "System-wide" cancellations, then Bus #${bus} is implicitly cancelled.
-                2. If Bus #${bus} is explicitly listed as cancelled or delayed, it is cancelled.
-                3. If Bus #${bus} is NOT mentioned anywhere, AND there is no "All buses cancelled" message, assume it is running normally.
+                TASK:
+                1. Search for live news, school board posts, or transportation tweets regarding school closures/bus cancellations in ${city}.
+                2. VALIDATE CREDIBILITY: Only trust official board sites, major news (CBC, CTV, etc.), or verified government accounts. Ignore random social posts.
+                3. CHECK HOLIDAYS: Is it currently March Break or a public holiday in Ontario?
                 
-                Respond ONLY in this exact format:
-                DECISION: [SLEEP IN (if cancelled) or WAKE UP (if running/not mentioned)]
-                REASON: [Explain exactly why based on the rules and what you read in the text]`;
+                FINAL OUTPUT FORMAT:
+                DECISION: [SLEEP IN or WAKE UP]
+                REASON: [Summarize the credible evidence found]`;
 
                 const result = await model.generateContent(prompt);
-                const response = result.response.text();
+                const text = result.response.text();
                 
-                scanner.style.display = 'none';
+                const isSleep = text.toUpperCase().includes("SLEEP");
+                log.innerText = `Audit Complete: ${isSleep ? 'Potential Cancellation Found' : 'Clear Skies'}`;
 
-                const isSleep = response.toUpperCase().includes("SLEEP");
-                let reason = response.split("REASON:")[1] || "Data analyzed successfully.";
-                
-                decisionTxt.innerText = isSleep ? "SLEEP IN" : "WAKE UP";
-                decisionTxt.className = isSleep ? "text-4xl font-black tracking-tighter text-blue-500" : "text-4xl font-black tracking-tighter text-red-500";
-                reasonTxt.innerText = reason.trim();
-
-                if (!isSleep) {
-                    playAlarmSound();
-                    document.getElementById('stop-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('stop-btn').classList.add('hidden');
+                if (isFinal || isSleep) {
+                    panel.classList.remove('hidden');
+                    title.innerText = isSleep ? "SLEEP IN" : "WAKE UP";
+                    title.className = `text-3xl font-black italic tracking-tighter ${isSleep ? 'text-blue-500' : 'text-red-600'}`;
+                    reason.innerText = text.split("REASON:")[1] || "Credibility audit passed.";
+                    
+                    if(!isSleep && isFinal) triggerHeavyAlarm();
+                    if(isSleep) document.getElementById('dismiss-btn').classList.remove('hidden');
                 }
 
             } catch (err) {
-                scanner.style.display = 'none';
-                decisionTxt.innerText = "SYSTEM ERROR";
-                decisionTxt.className = "text-3xl font-black tracking-tighter text-yellow-500";
-                reasonTxt.innerText = "The connection or API keys failed. Defaulting to standard alarm to ensure you don't oversleep.";
-                playAlarmSound();
-                document.getElementById('stop-btn').classList.remove('hidden');
-                console.error("SnowDay Error Log:", err);
+                console.error(err);
+                if(isFinal) triggerHeavyAlarm();
             } finally {
-                testBtn.disabled = false;
+                scanner.style.display = 'none';
             }
-        };
-
-        function playAlarmSound() {
-            if (isAlarmRinging) return;
-            isAlarmRinging = true;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            alarmInterval = setInterval(() => {
-                oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
-                
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.5);
-            }, 1000);
         }
 
-        window.stopAlarm = () => {
+        function triggerHeavyAlarm() {
+            if(isRinging) return;
+            isRinging = true;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            alarmInterval = setInterval(() => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            }, 700);
+            document.getElementById('dismiss-btn').classList.remove('hidden');
+        }
+
+        window.dismissAlarm = () => {
             if(alarmInterval) clearInterval(alarmInterval);
-            isAlarmRinging = false;
-            document.getElementById('stop-btn').classList.add('hidden');
-            document.getElementById('ai-verdict-box').classList.add('hidden');
-            document.getElementById('alarm-toggle').checked = false;
-            document.getElementById('alarm-status-text').innerText = "Alarm Inactive";
-            document.getElementById('alarm-status-text').classList.remove('text-blue-400');
-            document.getElementById('alarm-status-text').classList.add('text-zinc-400');
+            isRinging = false;
+            document.getElementById('verdict-panel').classList.add('hidden');
         };
     </script>
 </body>
