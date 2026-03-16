@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Autonomous Search Engine</title>
+    <title>SnowDay AI | Smart Alarm</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
       {
@@ -13,115 +13,317 @@
       }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #080808; color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .iphone { border: 12px solid #1c1c1e; border-radius: 55px; width: 340px; height: 720px; background: #000; position: relative; margin: auto; box-shadow: 0 0 100px rgba(59, 130, 246, 0.1); }
-        .glass { background: rgba(255,255,255,0.02); backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.08); border-radius: 35px; }
-        .scanning { animation: scan 2s infinite ease-in-out; }
-        @keyframes scan { 0%, 100% { color: #3b82f6; opacity: 1; } 50% { color: #1d4ed8; opacity: 0.5; } }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { background-color: #050505; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        .app-container { border: 12px solid #1a1a1c; border-radius: 55px; width: 375px; height: 812px; background: #000; margin: 20px auto; position: relative; box-shadow: 0 20px 60px rgba(59, 130, 246, 0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .glass-panel { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; }
+        .nav-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
+        
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
+        
+        /* Loading Animation */
+        .scan-line { width: 100%; height: 2px; background: #3b82f6; position: absolute; top: 0; left: 0; box-shadow: 0 0 10px #3b82f6; animation: scan 3s infinite; display: none; }
+        @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
+<body class="min-h-screen flex items-center justify-center bg-zinc-950">
 
-    <div class="iphone flex flex-col overflow-hidden">
-        <div class="p-8 space-y-7 flex-1 overflow-y-auto">
+    <div class="app-container">
+        <div class="flex justify-between items-center p-6 pb-2">
+            <h1 class="text-xl font-extrabold tracking-tight">SnowDay<span class="text-blue-500">AI</span></h1>
+            <div class="text-xs font-semibold text-zinc-500" id="live-time">00:00 AM</div>
+        </div>
+
+        <div class="flex px-6 space-x-6 border-b border-white/10 mb-6">
+            <button onclick="switchTab('home')" id="tab-home" class="nav-btn active pb-2 text-sm font-bold transition-colors">Alarm</button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn pb-2 text-sm font-bold text-zinc-500 transition-colors">Settings</button>
+        </div>
+
+        <div id="view-home" class="flex-1 px-6 overflow-y-auto space-y-6 pb-10">
             
-            <header class="text-center pt-6">
-                <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[7px] font-black uppercase tracking-[0.3em] mb-2 border border-blue-500/20">Grounding Active</div>
-                <h1 class="text-4xl font-black italic tracking-tighter leading-none">SNOW<span class="text-blue-600 italic">AI</span></h1>
-            </header>
-
-            <div class="glass p-6 space-y-5">
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Location / Zone</label>
-                    <input id="loc" type="text" value="North Bay NPSSTS" class="w-full bg-white/5 p-4 rounded-2xl text-xs outline-none focus:ring-1 focus:ring-blue-500 border border-white/5">
+            <div class="glass-panel p-6 text-center relative overflow-hidden">
+                <div id="scanner" class="scan-line"></div>
+                <input type="time" id="alarm-time" value="06:30" class="bg-transparent text-5xl font-extrabold text-white outline-none w-full text-center tracking-tighter mb-2 [color-scheme:dark]">
+                <p class="text-xs text-zinc-400 font-semibold uppercase tracking-widest" id="alarm-status-text">Alarm Inactive</p>
+                
+                <div class="mt-6 flex justify-center items-center">
+                    <div class="relative inline-block w-16 h-8 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="alarm-toggle" class="toggle-checkbox absolute block w-8 h-8 rounded-full bg-white border-4 border-zinc-700 appearance-none cursor-pointer transition-transform duration-300 z-10"/>
+                        <label for="alarm-toggle" class="toggle-label block overflow-hidden h-8 rounded-full bg-zinc-800 cursor-pointer transition-colors duration-300"></label>
+                    </div>
                 </div>
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-zinc-500 uppercase tracking-widest ml-1">Your Bus #</label>
-                    <input id="bus" type="text" placeholder="e.g. 123" class="w-full bg-white/5 p-4 rounded-2xl text-xs outline-none border border-white/5">
-                </div>
-                <button id="main-btn" onclick="executeAutonomousSearch()" class="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-3xl font-black text-[10px] uppercase tracking-[0.2em] transition-all active:scale-95 shadow-[0_10px_20px_rgba(37,99,235,0.2)]">
-                    Analyze Live Web
-                </button>
             </div>
 
-            <div id="ai-status" class="hidden glass p-6 space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-[9px] uppercase font-black scanning tracking-widest">Neural Link Searching</span>
-                    <div id="loader" class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div class="space-y-4">
+                <div class="glass-panel p-4 flex flex-col space-y-2">
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Web Portal</label>
+                    <input type="text" id="target-url" value="geoquery.npssts.ca/Alerts" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
                 </div>
-                <div id="log" class="text-[10px] font-mono text-zinc-500 leading-relaxed italic space-y-1"></div>
-                
-                <div id="verdict" class="hidden pt-6 border-t border-white/10 text-center animate-in fade-in zoom-in-95 duration-500">
-                    <p id="decision" class="text-4xl font-black italic uppercase tracking-tighter"></p>
-                    <p id="reasoning" class="text-[11px] text-zinc-400 mt-3 leading-relaxed px-2 font-medium"></p>
+                <div class="glass-panel p-4 flex flex-col space-y-2">
+                    <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Bus Number</label>
+                    <input type="text" id="target-bus" placeholder="e.g., 123" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
+                </div>
+            </div>
+
+            <div id="ai-verdict-box" class="glass-panel p-5 border border-blue-500/30 hidden animate-in fade-in slide-in-from-bottom-4">
+                <div class="flex items-center space-x-2 mb-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">AI Verdict Log</span>
+                </div>
+                <p id="ai-decision" class="text-3xl font-black tracking-tighter"></p>
+                <p id="ai-reason" class="text-xs text-zinc-400 mt-2 leading-relaxed"></p>
+                <button onclick="stopAlarm()" id="stop-btn" class="hidden w-full mt-4 bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl text-xs font-bold uppercase transition">Dismiss Alarm</button>
+            </div>
+            
+            <button onclick="triggerAIAnalysis()" id="test-btn" class="w-full bg-white/5 hover:bg-white/10 border border-white/10 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-colors active:scale-95">
+                Force AI Test Scan
+            </button>
+        </div>
+
+        <div id="view-settings" class="flex-1 px-6 overflow-y-auto space-y-6 hidden pb-10">
+            <div class="flex items-center space-x-4 glass-panel p-4">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-lg font-bold">IT</div>
+                <div>
+                    <h3 class="font-bold text-sm">Isaac's Account</h3>
+                    <p class="text-xs text-zinc-500">Free Tier (Birchaven Local)</p>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest px-2">System Preferences</h4>
+                <div class="glass-panel divide-y divide-white/5">
+                    <div class="p-4 flex justify-between items-center">
+                        <span class="text-sm font-semibold">Alarm Tone</span>
+                        <span class="text-xs text-zinc-400">Digital Pulse</span>
+                    </div>
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-white/5 transition" onclick="showPaywall()">
+                        <span class="text-sm font-semibold flex items-center gap-2">Deep Neural Scan <span class="bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full uppercase">Pro</span></span>
+                        <span class="text-xs text-zinc-400">Locked</span>
+                    </div>
+                    <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-white/5 transition" onclick="showPaywall()">
+                        <span class="text-sm font-semibold flex items-center gap-2">Track Multiple Buses <span class="bg-blue-500 text-white text-[8px] px-2 py-0.5 rounded-full uppercase">Pro</span></span>
+                        <span class="text-xs text-zinc-400">Locked</span>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div id="paywall" class="absolute inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex-col justify-end">
+            <div class="bg-zinc-900 border-t border-white/10 rounded-t-3xl p-8 transform transition-transform translate-y-full" id="paywall-content">
+                <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6"></div>
+                <h2 class="text-3xl font-black tracking-tight mb-2">Upgrade to <span class="text-blue-500 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SnowDay Pro</span></h2>
+                <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Unlock advanced AI routing, multiple bus tracking for siblings, and predictive weather alerts.</p>
+                
+                <div class="border border-blue-500/30 bg-blue-500/10 rounded-2xl p-4 mb-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-blue-500 text-[9px] font-bold px-3 py-1 rounded-bl-xl uppercase">Best Value</div>
+                    <p class="text-2xl font-black">$19.99<span class="text-sm text-zinc-400 font-normal"> / year</span></p>
+                    <p class="text-xs text-blue-400 mt-1">Less than the cost of missing a shift.</p>
+                </div>
+
+                <button onclick="closePaywall()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/25 transition active:scale-95 mb-3">Subscribe Now</button>
+                <button onclick="closePaywall()" class="w-full py-4 text-xs font-semibold text-zinc-500 hover:text-white transition">Maybe Later</button>
+            </div>
+        </div>
+
     </div>
 
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
-        // AUTONOMOUS CONFIG
         const API_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
+        
+        // Audio Context for the Alarm Sound (No external files needed)
+        let audioCtx;
+        let oscillator;
+        let alarmInterval;
+        let isAlarmRinging = false;
 
-        window.executeAutonomousSearch = async () => {
-            const loc = document.getElementById('loc').value;
-            const bus = document.getElementById('bus').value;
-            const log = document.getElementById('log');
-            const statusBox = document.getElementById('ai-status');
-            const verdict = document.getElementById('verdict');
-            const btn = document.getElementById('main-btn');
+        // UI Logic
+        window.switchTab = (tab) => {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-settings').classList.add('hidden');
+            document.getElementById('tab-home').classList.remove('active', 'text-blue-500');
+            document.getElementById('tab-home').classList.add('text-zinc-500');
+            document.getElementById('tab-settings').classList.remove('active', 'text-blue-500');
+            document.getElementById('tab-settings').classList.add('text-zinc-500');
 
-            statusBox.classList.remove('hidden');
-            verdict.classList.add('hidden');
-            log.innerHTML = `> Establishing Google Search Grounding...<br>`;
-            btn.disabled = true;
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.remove('text-zinc-500');
+            document.getElementById(`tab-${tab}`).classList.add('active', 'text-blue-500');
+        };
+
+        window.showPaywall = () => {
+            const pw = document.getElementById('paywall');
+            const content = document.getElementById('paywall-content');
+            pw.classList.remove('hidden');
+            pw.classList.add('flex');
+            setTimeout(() => content.classList.remove('translate-y-full'), 10);
+        };
+
+        window.closePaywall = () => {
+            const pw = document.getElementById('paywall');
+            const content = document.getElementById('paywall-content');
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                pw.classList.add('hidden');
+                pw.classList.remove('flex');
+            }, 300);
+        };
+
+        // Live Clock & Alarm Trigger
+        setInterval(() => {
+            const now = new Date();
+            let hours = now.getHours();
+            let mins = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            // Format for display
+            const displayHours = hours % 12 || 12;
+            document.getElementById('live-time').innerText = `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`;
+
+            // Check Alarm
+            const toggle = document.getElementById('alarm-toggle');
+            if (toggle.checked && !isAlarmRinging) {
+                const alarmInput = document.getElementById('alarm-time').value; // Format: "HH:MM" 24hr
+                const current24 = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+                
+                // If the exact minute hits and we haven't fired yet
+                if (current24 === alarmInput && !window.hasFiredToday) {
+                    window.hasFiredToday = true; // Prevent multiple fires in the same minute
+                    triggerAIAnalysis();
+                }
+            }
+        }, 1000);
+
+        // Reset the daily fire block at midnight
+        setInterval(() => {
+            const now = new Date();
+            if(now.getHours() === 0 && now.getMinutes() === 0) window.hasFiredToday = false;
+        }, 60000);
+
+        // Toggle Listener
+        document.getElementById('alarm-toggle').addEventListener('change', (e) => {
+            const statusText = document.getElementById('alarm-status-text');
+            if(e.target.checked) {
+                statusText.innerText = "Monitoring Network...";
+                statusText.classList.add('text-blue-400');
+                statusText.classList.remove('text-zinc-400');
+                window.hasFiredToday = false; // Reset if they toggle it back on
+            } else {
+                statusText.innerText = "Alarm Inactive";
+                statusText.classList.remove('text-blue-400');
+                statusText.classList.add('text-zinc-400');
+                stopAlarm();
+            }
+        });
+
+        // The Deep Scan Logic
+        window.triggerAIAnalysis = async () => {
+            const url = document.getElementById('target-url').value;
+            const bus = document.getElementById('target-bus').value || "any";
+            
+            const verdictBox = document.getElementById('ai-verdict-box');
+            const decisionTxt = document.getElementById('ai-decision');
+            const reasonTxt = document.getElementById('ai-reason');
+            const scanner = document.getElementById('scanner');
+            const testBtn = document.getElementById('test-btn');
+
+            verdictBox.classList.remove('hidden');
+            decisionTxt.innerText = "LOADING...";
+            decisionTxt.className = "text-3xl font-black tracking-tighter text-blue-500 animate-pulse";
+            reasonTxt.innerText = `Establishing connection to ${url}. Waiting for dynamic content to load...`;
+            scanner.style.display = 'block';
+            testBtn.disabled = true;
+
+            // Step 1: Simulated "Patience" for the target website to load
+            await new Promise(resolve => setTimeout(resolve, 3500));
+            reasonTxt.innerText = "Content loaded. Executing Neural Scan for Bus #" + bus + "...";
 
             try {
                 const genAI = new GoogleGenerativeAI(API_KEY);
-                // Enabling the Google Search tool allows the AI to "go out" and find info
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-1.5-flash",
                     tools: [{ googleSearch: {} }] 
                 });
 
-                log.innerHTML += `> Querying live bus alerts for ${loc}...<br>`;
-                log.innerHTML += `> AI is cross-referencing search results...<br>`;
-
-                // The prompt now forces the AI to use its search tool
-                const prompt = `Research the school bus cancellation status for ${loc} today, Monday, March 16, 2026. 
-                Is Bus #${bus || 'any school bus'} cancelled? Look for terms like 'busing cancelled', 'inclement weather', or 'route delays'.
+                // The strict logic prompt
+                const prompt = `Search for current school bus cancellations related to "${url}". 
+                We are looking for the status of Bus #${bus}.
+                Apply these strict logic rules:
+                1. If the search indicates that "ALL buses" or "All transportation" is cancelled, then Bus #${bus} is implicitly cancelled.
+                2. If Bus #${bus} is explicitly listed as cancelled or delayed, it is cancelled.
+                3. If Bus #${bus} is NOT mentioned anywhere, AND there is no "All buses cancelled" message, assume it is running normally.
                 
-                Provide your response exactly like this:
-                DECISION: [SLEEP or WAKE]
-                REASON: [Explain exactly what you found in the search results regarding cancellations or current status]`;
+                Respond ONLY in this format:
+                DECISION: [SLEEP IN (if cancelled) or WAKE UP (if running/not mentioned)]
+                REASON: [Explain exactly why based on the rules]`;
 
                 const result = await model.generateContent(prompt);
-                const responseText = result.response.text();
+                const response = result.response.text();
+                
+                scanner.style.display = 'none';
 
-                log.innerHTML += `> Decision logic finalized.<br>`;
+                const isSleep = response.toUpperCase().includes("SLEEP");
+                let reason = response.split("REASON:")[1] || "Data analyzed successfully.";
+                
+                decisionTxt.innerText = isSleep ? "SLEEP IN" : "WAKE UP";
+                decisionTxt.className = isSleep ? "text-4xl font-black tracking-tighter text-blue-500" : "text-4xl font-black tracking-tighter text-red-500";
+                reasonTxt.innerText = reason.trim();
 
-                const isSleep = responseText.includes("SLEEP");
-                const decisionEl = document.getElementById('decision');
-                
-                decisionEl.innerText = isSleep ? "SLEEP IN" : "WAKE UP";
-                decisionEl.className = isSleep ? "text-4xl font-black text-red-500 italic" : "text-4xl font-black text-green-500 italic text-glow";
-                
-                // Clean up the reason text
-                let reason = responseText.split("REASON:")[1] || "No alert data found for today.";
-                document.getElementById('reasoning').innerText = reason.trim();
-                
-                verdict.classList.remove('hidden');
-                document.getElementById('loader').classList.add('hidden');
+                if (!isSleep) {
+                    playAlarmSound();
+                    document.getElementById('stop-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('stop-btn').classList.add('hidden');
+                }
 
             } catch (err) {
-                log.innerHTML += `<span class="text-red-500">> Neural failure: Link timed out.</span>`;
-                console.error(err);
+                scanner.style.display = 'none';
+                decisionTxt.innerText = "SCAN FAILED";
+                decisionTxt.className = "text-3xl font-black tracking-tighter text-yellow-500";
+                reasonTxt.innerText = "Connection blocked or timed out. Defaulting to standard alarm to ensure you don't oversleep.";
+                playAlarmSound();
+                document.getElementById('stop-btn').classList.remove('hidden');
             } finally {
-                btn.disabled = false;
+                testBtn.disabled = false;
             }
+        };
+
+        // Synthesized Alarm Audio
+        function playAlarmSound() {
+            if (isAlarmRinging) return;
+            isAlarmRinging = true;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            alarmInterval = setInterval(() => {
+                oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // High pitched beep
+                
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            }, 1000);
+        }
+
+        window.stopAlarm = () => {
+            if(alarmInterval) clearInterval(alarmInterval);
+            isAlarmRinging = false;
+            document.getElementById('stop-btn').classList.add('hidden');
+            document.getElementById('ai-verdict-box').classList.add('hidden');
+            document.getElementById('alarm-toggle').checked = false;
+            document.getElementById('alarm-status-text').innerText = "Alarm Inactive";
+            document.getElementById('alarm-status-text').classList.remove('text-blue-400');
+            document.getElementById('alarm-status-text').classList.add('text-zinc-400');
         };
     </script>
 </body>
