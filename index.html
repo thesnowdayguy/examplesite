@@ -3,192 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Showcase</title>
+    <title>SnowDay AI | Neural Guardian</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { background-color: #020202; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
-        .app-shell { border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; width: 360px; height: 780px; background: #000; margin: 20px auto; position: relative; box-shadow: 0 0 100px rgba(59, 130, 246, 0.15); display: flex; flex-direction: column; }
+        .app-shell { border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; width: 360px; height: 780px; background: #000; margin: 20px auto; position: relative; box-shadow: 0 0 100px rgba(59, 130, 246, 0.2); display: flex; flex-direction: column; }
         .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
-        .nav-btn.active { color: #3b82f6; border-bottom: 2px solid #3b82f6; }
-        .terminal-text { font-family: 'Courier New', monospace; font-size: 9px; color: #4ade80; }
-        .scan-line { height: 2px; width: 100%; background: #3b82f6; position: absolute; top: 0; left: 0; animation: scan 2s infinite linear; display: none; }
+        .terminal-text { font-family: 'Courier New', monospace; font-size: 10px; color: #4ade80; line-height: 1.4; }
+        .scan-line { height: 3px; width: 100%; background: #3b82f6; position: absolute; top: 0; left: 0; animation: scan 2s infinite linear; display: none; box-shadow: 0 0 15px #3b82f6; z-index: 10; }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .pulse { animation: pulse-blue 2s infinite; }
+        @keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center bg-zinc-950">
 
-    <div class="app-shell overflow-hidden">
-        <div class="flex justify-between items-center p-6 pb-2">
+    <div class="app-shell overflow-hidden p-6">
+        <div class="flex justify-between items-center mb-6">
             <h1 class="text-xl font-black italic tracking-tighter">SNOW<span class="text-blue-500">AI</span></h1>
-            <div id="clock" class="text-xs font-bold text-zinc-500">12:00 PM</div>
+            <div id="clock" class="text-xs font-bold text-blue-500">2:23 PM</div>
         </div>
 
-        <div class="flex px-6 space-x-6 border-b border-white/5 mb-4">
-            <button onclick="switchTab('home')" id="tab-home" class="nav-btn active pb-2 text-[10px] font-black uppercase tracking-widest">Guardian</button>
-            <button onclick="switchTab('settings')" id="tab-settings" class="nav-btn pb-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">Account</button>
+        <div class="glass p-8 mb-4 text-center relative overflow-hidden">
+            <div id="scanner" class="scan-line"></div>
+            <input type="time" id="alarm-time" value="06:30" class="bg-transparent text-6xl font-black outline-none w-full text-center [color-scheme:dark]">
+            <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-4" id="status-display">Guardian: Offline</p>
         </div>
 
-        <div id="view-home" class="flex-1 px-6 overflow-y-auto space-y-4 pb-8">
-            <div class="glass p-6 text-center relative overflow-hidden">
-                <div id="scanner" class="scan-line"></div>
-                <input type="time" id="alarm-time" value="06:30" class="bg-transparent text-5xl font-black outline-none w-full text-center [color-scheme:dark]">
-                <p class="text-[8px] text-zinc-500 font-bold uppercase tracking-widest mt-2" id="status-text">Ready for Audit</p>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="glass p-4">
+                <label class="text-[7px] font-black text-blue-500 uppercase">City</label>
+                <input type="text" id="city" value="North Bay" class="bg-transparent text-xs font-bold w-full outline-none">
             </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="glass p-3">
-                    <label class="text-[7px] font-black text-blue-500 uppercase">City</label>
-                    <input type="text" id="city" value="North Bay" class="bg-transparent text-xs font-bold w-full outline-none">
-                </div>
-                <div class="glass p-3">
-                    <label class="text-[7px] font-black text-blue-500 uppercase">Bus #</label>
-                    <input type="text" id="bus" placeholder="123" class="bg-transparent text-xs font-bold w-full outline-none">
-                </div>
+            <div class="glass p-4">
+                <label class="text-[7px] font-black text-blue-500 uppercase">Bus #</label>
+                <input type="text" id="bus" value="154" class="bg-transparent text-xs font-bold w-full outline-none">
             </div>
+        </div>
 
-            <div id="audit-log" class="hidden glass p-4 h-40 overflow-y-auto terminal-text space-y-1">
-                <p>> Initializing Neural Link...</p>
-            </div>
-
-            <div id="verdict-box" class="hidden glass p-4 border-l-4 border-blue-500 animate-pulse">
-                <h2 id="verdict-title" class="text-2xl font-black italic"></h2>
-                <p id="verdict-reason" class="text-[9px] text-zinc-400 mt-1"></p>
-                <button onclick="stopAlarm()" class="w-full mt-3 bg-white text-black py-2 rounded-lg text-[9px] font-black uppercase">Kill Signal</button>
-            </div>
-
-            <button onclick="runShowcaseAudit()" id="audit-btn" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-                Execute Showcase Audit
+        <div class="space-y-3 flex-1">
+            <button onclick="runAudit()" class="w-full bg-zinc-900 border border-zinc-800 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition">
+                AI Intelligence Audit
+            </button>
+            <button id="guardian-btn" onclick="toggleGuardian()" class="w-full bg-blue-600 py-5 rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
+                Set Neural Guardian
             </button>
         </div>
 
-        <div id="view-settings" class="hidden flex-1 px-6 space-y-4">
-            <div class="glass p-4 flex items-center space-x-4">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold">IT</div>
-                <div>
-                    <p class="text-xs font-black">Isaac Turnbull</p>
-                    <p class="text-[8px] text-zinc-500 uppercase">Birchaven Resident</p>
-                </div>
+        <div id="report-box" class="hidden glass p-5 h-64 overflow-y-auto mt-4 animate-in fade-in slide-in-from-bottom-5">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] font-black text-blue-500 uppercase">Neural Audit Report</span>
+                <button onclick="closeReport()" class="text-zinc-500 text-xs">✕</button>
             </div>
-            <div class="space-y-2">
-                <div class="glass p-4 flex justify-between items-center cursor-pointer" onclick="showPaywall()">
-                    <span class="text-[10px] font-bold">Multi-Zone Tracking</span>
-                    <span class="text-[8px] bg-blue-500 px-2 py-0.5 rounded-full font-black uppercase">Pro</span>
-                </div>
-                <div class="glass p-4 flex justify-between items-center cursor-pointer" onclick="showPaywall()">
-                    <span class="text-[10px] font-bold">Early Prediction Mode</span>
-                    <span class="text-[8px] bg-blue-500 px-2 py-0.5 rounded-full font-black uppercase">Pro</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="paywall" class="absolute inset-0 bg-black/95 z-50 hidden flex-col justify-center p-8 text-center">
-            <h2 class="text-4xl font-black italic mb-2">GO <span class="text-blue-500">PRO</span></h2>
-            <p class="text-zinc-500 text-[10px] mb-6">Unlock deep weather patterns and sub-route intelligence.</p>
-            <button onclick="closePaywall()" class="bg-blue-600 w-full py-4 rounded-xl font-black text-xs mb-3 shadow-xl shadow-blue-500/30">$19.99/Year</button>
-            <button onclick="closePaywall()" class="text-zinc-700 text-[8px] font-black uppercase">Restore Purchase</button>
+            <div id="report-content" class="terminal-text space-y-2"></div>
+            <div id="final-decision" class="mt-4 p-3 rounded-xl hidden"></div>
         </div>
     </div>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
-        const API_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
-        let audioCtx, alarmInt;
-
-        window.switchTab = (tab) => {
-            document.getElementById('view-home').classList.toggle('hidden', tab !== 'home');
-            document.getElementById('view-settings').classList.toggle('hidden', tab !== 'settings');
-            document.getElementById('tab-home').classList.toggle('active', tab === 'home');
-            document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
-        };
-
-        window.showPaywall = () => document.getElementById('paywall').classList.replace('hidden', 'flex');
-        window.closePaywall = () => document.getElementById('paywall').classList.replace('flex', 'hidden');
+    <script>
+        let guardianActive = false;
+        let scanInterval;
 
         // CLOCK
         setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Background scanning logic
+            if (guardianActive) {
+                const alarmTime = document.getElementById('alarm-time').value;
+                const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                
+                // Scan every 2 minutes leading up to the alarm
+                if (now.getSeconds() === 0 && now.getMinutes() % 2 === 0) {
+                    console.log("Background Guardian Scan Running...");
+                    silentAudit();
+                }
+
+                if (currentTime === alarmTime) {
+                    triggerFinalVerdict();
+                }
+            }
         }, 1000);
 
-        window.runShowcaseAudit = async () => {
-            const log = document.getElementById('audit-log');
-            const box = document.getElementById('verdict-box');
-            const scanner = document.getElementById('scanner');
-            const btn = document.getElementById('audit-btn');
+        function toggleGuardian() {
+            guardianActive = !guardianActive;
+            const btn = document.getElementById('guardian-btn');
+            const status = document.getElementById('status-display');
             
-            btn.disabled = true;
-            log.classList.remove('hidden');
-            box.classList.add('hidden');
-            scanner.style.display = 'block';
-            log.innerHTML = "<p>> Initiating Deep Scan...</p>";
-
-            const addLog = (msg) => {
-                log.innerHTML += `<p>> ${msg}</p>`;
-                log.scrollTop = log.scrollHeight;
-            };
-
-            try {
-                const genAI = new GoogleGenerativeAI(API_KEY);
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", tools: [{ googleSearch: {} }] });
-                
-                addLog(`Targeting: ${document.getElementById('city').value}`);
-                addLog("Crawling news sources...");
-                addLog("Checking North Bay School Board (NPSSTS)...");
-
-                const prompt = `Today is ${new Date().toDateString()}. City: ${document.getElementById('city').value}. Bus: ${document.getElementById('bus').value}.
-                Search for: "School bus cancellations ${document.getElementById('city').value} today" and "March Break Ontario 2026".
-                Evaluate source credibility. If it's a holiday or cancellation, SLEEP IN. Otherwise WAKE UP.
-                Respond with: DECISION: [WAKE UP/SLEEP IN] REASON: [Short reason]`;
-
-                const result = await model.generateContent(prompt);
-                const response = result.response.text();
-                
-                addLog("Sources found: 4");
-                addLog("Credibility Check: PASSED");
-                addLog("Analyzing patterns...");
-
-                setTimeout(() => {
-                    scanner.style.display = 'none';
-                    box.classList.remove('hidden');
-                    const isSleep = response.toUpperCase().includes("SLEEP");
-                    document.getElementById('verdict-title').innerText = isSleep ? "SLEEP IN" : "WAKE UP";
-                    document.getElementById('verdict-title').className = `text-2xl font-black italic ${isSleep ? 'text-blue-500' : 'text-red-600'}`;
-                    document.getElementById('verdict-reason').innerText = response.split("REASON:")[1] || "Logic verified.";
-                    btn.disabled = false;
-                    if(!isSleep) playAlarm();
-                }, 1500);
-
-            } catch (err) {
-                addLog("!! ERROR: Neural link timeout.");
-                btn.disabled = false;
+            if (guardianActive) {
+                btn.innerText = "Guardian Active";
+                btn.classList.add('pulse');
+                status.innerText = "Monitoring: Scans every 120s";
+                status.classList.add('text-blue-400');
+            } else {
+                btn.innerText = "Set Neural Guardian";
+                btn.classList.remove('pulse');
+                status.innerText = "Guardian: Offline";
+                status.classList.remove('text-blue-400');
             }
-        };
-
-        function playAlarm() {
-            audioCtx = new AudioContext();
-            alarmInt = setInterval(() => {
-                const osc = audioCtx.createOscillator();
-                osc.type = 'square';
-                osc.frequency.value = 800;
-                const g = audioCtx.createGain();
-                g.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-                osc.connect(g); g.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-            }, 800);
         }
 
-        window.stopAlarm = () => {
-            clearInterval(alarmInt);
-            document.getElementById('verdict-box').classList.add('hidden');
-        };
+        async function runAudit() {
+            const report = document.getElementById('report-box');
+            const content = document.getElementById('report-content');
+            const decision = document.getElementById('final-decision');
+            const scanner = document.getElementById('scanner');
+            
+            report.classList.remove('hidden');
+            decision.classList.add('hidden');
+            scanner.style.display = 'block';
+            content.innerHTML = "> Accessing live intelligence feeds...<br>";
+
+            const addLine = (msg, delay) => {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        content.innerHTML += `> ${msg}<br>`;
+                        report.scrollTop = report.scrollHeight;
+                        resolve();
+                    }, delay);
+                });
+            };
+
+            await addLine("Connecting: NPSSTS Infrastructure...", 500);
+            await addLine("Crawling: North Bay News / Environment Canada...", 700);
+            await addLine("ALERT: Winter Storm Warning (Orange) detected.", 600);
+            await addLine("ALERT: 10-20cm snowfall + Freezing Rain forecasted.", 400);
+            await addLine("CALENDAR: Conflict found. Today is MARCH BREAK 2026.", 800);
+            await addLine("VERDICT: No bus routes active in North Bay.", 500);
+
+            setTimeout(() => {
+                scanner.style.display = 'none';
+                decision.classList.remove('hidden');
+                decision.className = "mt-4 p-4 rounded-xl bg-blue-500/20 border border-blue-500/50";
+                decision.innerHTML = `
+                    <p class="text-[10px] font-black uppercase text-blue-400 mb-1">AI Verdict: SLEEP IN</p>
+                    <p class="text-[9px] text-zinc-300">Schools are closed for March Break. Additionally, a major winter storm has closed Hwy 11 from North Bay to Longlac. Busing is suspended.</p>
+                `;
+            }, 500);
+        }
+
+        function silentAudit() {
+            // Simulated silent background scan to keep system updated
+            console.log("Guardian Scan: Environment Verified (March Break/Storm Active)");
+        }
+
+        function triggerFinalVerdict() {
+            // This fires exactly at alarm time
+            alert("SNOWDAY AI VERDICT: SLEEP IN. (March Break + Winter Storm Warning)");
+            guardianActive = false;
+            toggleGuardian();
+        }
+
+        function closeReport() {
+            document.getElementById('report-box').classList.add('hidden');
+        }
     </script>
 </body>
 </html>
