@@ -59,7 +59,7 @@
             <div class="space-y-4">
                 <div class="glass-panel p-4 flex flex-col space-y-2">
                     <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Web Portal</label>
-                    <input type="text" id="target-url" value="geoquery.npssts.ca/Alerts" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
+                    <input type="text" id="target-url" value="https://geoquery.npssts.ca/Alerts" class="bg-transparent text-sm text-white outline-none w-full border-b border-white/10 pb-2 focus:border-blue-500 transition-colors">
                 </div>
                 <div class="glass-panel p-4 flex flex-col space-y-2">
                     <label class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Target Bus Number</label>
@@ -87,7 +87,7 @@
                 <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-lg font-bold">IT</div>
                 <div>
                     <h3 class="font-bold text-sm">Isaac's Account</h3>
-                    <p class="text-xs text-zinc-500">Free Tier (Birchaven Local)</p>
+                    <p class="text-xs text-zinc-500">Free Tier (Local Connection)</p>
                 </div>
             </div>
 
@@ -132,9 +132,11 @@
     <script type="module">
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
-        const API_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
+        // BOTH KEYS INTEGRATED FOR FAIL-PROOF SCANNING
+        const GEMINI_KEY = "AIzaSyAKMIdaa0-NqG5xQfv85WxyHPlSOtg_kO8";
+        const SCRAPER_KEY = "e8e2f18c-513a-480d-b691-cbdbe9050598";
         
-        // Audio Context for the Alarm Sound (No external files needed)
+        // Audio Context for the Alarm Sound
         let audioCtx;
         let oscillator;
         let alarmInterval;
@@ -179,38 +181,33 @@
             let mins = now.getMinutes();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             
-            // Format for display
             const displayHours = hours % 12 || 12;
             document.getElementById('live-time').innerText = `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`;
 
-            // Check Alarm
             const toggle = document.getElementById('alarm-toggle');
             if (toggle.checked && !isAlarmRinging) {
-                const alarmInput = document.getElementById('alarm-time').value; // Format: "HH:MM" 24hr
+                const alarmInput = document.getElementById('alarm-time').value; 
                 const current24 = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
                 
-                // If the exact minute hits and we haven't fired yet
                 if (current24 === alarmInput && !window.hasFiredToday) {
-                    window.hasFiredToday = true; // Prevent multiple fires in the same minute
+                    window.hasFiredToday = true; 
                     triggerAIAnalysis();
                 }
             }
         }, 1000);
 
-        // Reset the daily fire block at midnight
         setInterval(() => {
             const now = new Date();
             if(now.getHours() === 0 && now.getMinutes() === 0) window.hasFiredToday = false;
         }, 60000);
 
-        // Toggle Listener
         document.getElementById('alarm-toggle').addEventListener('change', (e) => {
             const statusText = document.getElementById('alarm-status-text');
             if(e.target.checked) {
                 statusText.innerText = "Monitoring Network...";
                 statusText.classList.add('text-blue-400');
                 statusText.classList.remove('text-zinc-400');
-                window.hasFiredToday = false; // Reset if they toggle it back on
+                window.hasFiredToday = false;
             } else {
                 statusText.innerText = "Alarm Inactive";
                 statusText.classList.remove('text-blue-400');
@@ -219,7 +216,7 @@
             }
         });
 
-        // The Deep Scan Logic
+        // THE BULLETPROOF SCAN ENGINE
         window.triggerAIAnalysis = async () => {
             const url = document.getElementById('target-url').value;
             const bus = document.getElementById('target-bus').value || "any";
@@ -231,34 +228,41 @@
             const testBtn = document.getElementById('test-btn');
 
             verdictBox.classList.remove('hidden');
-            decisionTxt.innerText = "LOADING...";
+            decisionTxt.innerText = "SCRAPING...";
             decisionTxt.className = "text-3xl font-black tracking-tighter text-blue-500 animate-pulse";
-            reasonTxt.innerText = `Establishing connection to ${url}. Waiting for dynamic content to load...`;
+            reasonTxt.innerText = `Bypassing firewall at ${url}. Extracting raw HTML...`;
             scanner.style.display = 'block';
             testBtn.disabled = true;
 
-            // Step 1: Simulated "Patience" for the target website to load
-            await new Promise(resolve => setTimeout(resolve, 3500));
-            reasonTxt.innerText = "Content loaded. Executing Neural Scan for Bus #" + bus + "...";
-
             try {
-                const genAI = new GoogleGenerativeAI(API_KEY);
-                const model = genAI.getGenerativeModel({ 
-                    model: "gemini-1.5-flash",
-                    tools: [{ googleSearch: {} }] 
-                });
+                // STEP 1: Scrape the raw page using the proxy (guaranteed to connect)
+                const fetchUrl = `https://api.webscraping.ai/v1/get?api_key=${SCRAPER_KEY}&url=${encodeURIComponent(url)}&render_js=true&proxy_type=premium`;
+                const scraperResponse = await fetch(fetchUrl);
+                const htmlText = await scraperResponse.text();
 
-                // The strict logic prompt
-                const prompt = `Search for current school bus cancellations related to "${url}". 
-                We are looking for the status of Bus #${bus}.
-                Apply these strict logic rules:
-                1. If the search indicates that "ALL buses" or "All transportation" is cancelled, then Bus #${bus} is implicitly cancelled.
+                decisionTxt.innerText = "ANALYZING...";
+                reasonTxt.innerText = `Data extracted. Feeding to Gemini Neural Core for logic processing...`;
+
+                // Strip out the massive HTML code blocks to save tokens and speed up the AI
+                const cleanText = htmlText.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim().substring(0, 15000);
+
+                // STEP 2: Gemini reasoning logic
+                const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+                const prompt = `You are an automated alarm clock logic engine. Read this raw text scraped from a school transportation portal:
+                ---
+                ${cleanText}
+                ---
+                Task: We are looking for the status of Bus #${bus}.
+                Apply these strict rules in order:
+                1. If the text says "ALL buses", "All transportation", or "System-wide" cancellations, then Bus #${bus} is implicitly cancelled.
                 2. If Bus #${bus} is explicitly listed as cancelled or delayed, it is cancelled.
                 3. If Bus #${bus} is NOT mentioned anywhere, AND there is no "All buses cancelled" message, assume it is running normally.
                 
-                Respond ONLY in this format:
+                Respond ONLY in this exact format:
                 DECISION: [SLEEP IN (if cancelled) or WAKE UP (if running/not mentioned)]
-                REASON: [Explain exactly why based on the rules]`;
+                REASON: [Explain exactly why based on the rules and what you read in the text]`;
 
                 const result = await model.generateContent(prompt);
                 const response = result.response.text();
@@ -281,17 +285,17 @@
 
             } catch (err) {
                 scanner.style.display = 'none';
-                decisionTxt.innerText = "SCAN FAILED";
+                decisionTxt.innerText = "SYSTEM ERROR";
                 decisionTxt.className = "text-3xl font-black tracking-tighter text-yellow-500";
-                reasonTxt.innerText = "Connection blocked or timed out. Defaulting to standard alarm to ensure you don't oversleep.";
+                reasonTxt.innerText = "The connection or API keys failed. Defaulting to standard alarm to ensure you don't oversleep.";
                 playAlarmSound();
                 document.getElementById('stop-btn').classList.remove('hidden');
+                console.error("SnowDay Error Log:", err);
             } finally {
                 testBtn.disabled = false;
             }
         };
 
-        // Synthesized Alarm Audio
         function playAlarmSound() {
             if (isAlarmRinging) return;
             isAlarmRinging = true;
@@ -302,9 +306,9 @@
                 const gainNode = audioCtx.createGain();
                 
                 oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // High pitched beep
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); 
                 
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); // Volume
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
                 
                 oscillator.connect(gainNode);
