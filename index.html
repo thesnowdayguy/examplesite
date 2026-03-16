@@ -3,122 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnowDay AI | Universal Engine</title>
+    <title>SnowDay AI | Functional Scanner</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.puter.com/v2/"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-        .glow-blue { box-shadow: 0 0 20px rgba(0, 122, 255, 0.3); }
-        input { background: rgba(255,255,255,0.1) !important; color: white !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #fff; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        input { background: rgba(255,255,255,0.05) !important; color: white !important; border: 1px solid rgba(255,255,255,0.1) !important; transition: all 0.2s; }
+        input:focus { border-color: #3b82f6 !important; outline: none; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        .error-shake { border-color: #ef4444 !important; animation: shake 0.4s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-6">
 
-    <div class="max-w-4xl w-full grid md:grid-cols-2 gap-8">
-        
-        <div class="glass p-8 rounded-[32px] space-y-6">
+    <div class="max-w-md w-full space-y-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold tracking-tight">SnowDay <span class="text-blue-500">AI</span></h1>
+            <p class="text-gray-400 text-sm mt-1">Universal School Board Scanner</p>
+        </div>
+
+        <div class="glass p-8 rounded-[40px] space-y-5">
             <div>
-                <h2 class="text-2xl font-bold mb-1">Configuration</h2>
-                <p class="text-gray-400 text-sm">Set your local data source & alarm.</p>
+                <label class="text-[10px] font-black uppercase text-gray-500 mb-2 block tracking-widest">Source URL</label>
+                <input id="target-url" type="text" placeholder="https://geoquery.npssts.ca/Alerts" 
+                       class="w-full p-4 rounded-2xl text-sm" value="https://geoquery.npssts.ca/Alerts">
+                <p id="url-error" class="text-red-500 text-[10px] mt-2 hidden font-bold uppercase tracking-tight">⚠️ Invalid URL - Please include http:// or https://</p>
             </div>
 
-            <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="text-xs font-bold uppercase text-gray-500 mb-2 block">Target URL</label>
-                    <input id="target-url" type="text" placeholder="https://your-school-board.com/alerts" class="w-full p-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="text-[10px] font-black uppercase text-gray-500 mb-2 block tracking-widest">Keyword</label>
+                    <input id="keyword" type="text" placeholder="Cancelled" class="w-full p-4 rounded-2xl text-sm" value="Cancelled">
                 </div>
-
                 <div>
-                    <label class="text-xs font-bold uppercase text-gray-500 mb-2 block">Trigger Keyword</label>
-                    <input id="keyword" type="text" placeholder="Cancelled" class="w-full p-3 rounded-xl outline-none">
+                    <label class="text-[10px] font-black uppercase text-gray-500 mb-2 block tracking-widest">Alarm</label>
+                    <input id="alarm-time" type="time" class="w-full p-4 rounded-2xl text-sm" value="07:00">
                 </div>
+            </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold uppercase text-gray-500 mb-2 block">Alarm Time</label>
-                        <input id="alarm-time" type="time" class="w-full p-3 rounded-xl outline-none">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold uppercase text-gray-500 mb-2 block">Scan Time</label>
-                        <input id="scan-time" type="time" value="05:45" class="w-full p-3 rounded-xl outline-none">
-                    </div>
-                </div>
-
-                <button onclick="saveSettings()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition glow-blue">Save & Sync</button>
+            <div class="pt-4">
+                <button id="scan-btn" onclick="performScan()" 
+                        class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-blue-900/20 active:scale-95">
+                    Start Scanning Engine
+                </button>
             </div>
         </div>
 
-        <div class="glass p-8 rounded-[32px] flex flex-col justify-between border-blue-500/30">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p id="current-date" class="text-blue-500 font-bold text-xs uppercase tracking-widest"></p>
-                    <h3 class="text-4xl font-light mt-1" id="clock">00:00:00</h3>
-                </div>
-                <div id="alarm-badge" class="px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-[10px] font-black uppercase">Alarm Armed</div>
-            </div>
-
-            <div class="py-10 text-center">
-                <div id="status-display" class="text-gray-500 italic">Waiting for scheduled scan...</div>
-                <div id="result-text" class="text-2xl font-bold mt-2"></div>
-            </div>
-
-            <div class="space-y-3">
-                <button onclick="manualScan()" class="w-full border border-white/20 hover:bg-white/5 py-3 rounded-xl text-sm font-medium transition">Run Manual Test Scan</button>
-                <p class="text-[10px] text-center text-gray-600 italic">Note: Real-world scraping requires a proxy to bypass CORS security.</p>
-            </div>
+        <div id="status-card" class="glass p-6 rounded-[30px] hidden text-center border-blue-500/20">
+            <div id="status-spinner" class="inline-block w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+            <p id="status-text" class="text-sm text-gray-400 font-medium italic italic">Checking source...</p>
+            <div id="final-result" class="text-xl font-bold mt-2"></div>
         </div>
     </div>
 
     <script>
-        // Clock Function
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-            document.getElementById('current-date').innerText = now.toDateString();
-        }, 1000);
-
-        // Load Saved Data
-        window.onload = () => {
-            document.getElementById('target-url').value = localStorage.getItem('snowday_url') || 'https://geoquery.npssts.ca/Alerts';
-            document.getElementById('keyword').value = localStorage.getItem('snowday_key') || 'Cancelled';
-            document.getElementById('alarm-time').value = localStorage.getItem('snowday_alarm') || '07:00';
-        };
-
-        function saveSettings() {
-            localStorage.setItem('snowday_url', document.getElementById('target-url').value);
-            localStorage.setItem('snowday_key', document.getElementById('keyword').value);
-            localStorage.setItem('snowday_alarm', document.getElementById('alarm-time').value);
-            alert("Settings saved to browser storage!");
+        // URL Validation Logic
+        function isValidHttpUrl(string) {
+            let url;
+            try {
+                url = new URL(string);
+            } catch (_) {
+                return false;  
+            }
+            return url.protocol === "http:" || url.protocol === "https:";
         }
 
-        async function manualScan() {
-            const status = document.getElementById('status-display');
-            const result = document.getElementById('result-text');
-            const badge = document.getElementById('alarm-badge');
-            const keyword = document.getElementById('keyword').value;
+        async function performScan() {
+            const urlInput = document.getElementById('target-url');
+            const errorText = document.getElementById('url-error');
+            const statusCard = document.getElementById('status-card');
+            const statusText = document.getElementById('status-text');
+            const finalResult = document.getElementById('final-result');
+            const keyword = document.getElementById('keyword').value.toLowerCase();
 
-            status.innerText = "Connecting to source...";
-            result.innerText = "";
-            
-            // Simulation of Scraper Logic
-            setTimeout(() => {
-                status.innerText = `Scanning for "${keyword}"...`;
+            // 1. Validate URL
+            if (!isValidHttpUrl(urlInput.value)) {
+                urlInput.classList.add('error-shake');
+                errorText.classList.remove('hidden');
+                setTimeout(() => urlInput.classList.remove('error-shake'), 400);
+                return;
+            } else {
+                errorText.classList.add('hidden');
+            }
+
+            // 2. Start Animation
+            statusCard.classList.remove('hidden');
+            statusText.innerText = `Attempting to reach ${new URL(urlInput.value).hostname}...`;
+            finalResult.innerText = "";
+
+            try {
+                // 3. Real Fetch Logic using Puter to bypass CORS
+                const response = await puter.net.fetch(urlInput.value);
+                const text = await response.text();
+                
+                statusText.innerText = "Parsing page content...";
                 
                 setTimeout(() => {
-                    // Logic: If keyword found, KILL the alarm
-                    const found = true; // In demo, we assume success
+                    document.getElementById('status-spinner').classList.add('hidden');
                     
-                    if(found) {
-                        status.innerText = "MATCH FOUND";
-                        result.innerHTML = `<span class="text-red-500 uppercase">${keyword} DETECTED</span>`;
-                        badge.innerText = "ALARM DEACTIVATED";
-                        badge.className = "px-3 py-1 bg-red-500/20 text-red-500 rounded-full text-[10px] font-black uppercase";
-                        // Visual cue of deactivation
-                        document.body.style.backgroundColor = "#0a0a0a";
+                    if (text.toLowerCase().includes(keyword)) {
+                        // SNOW DAY DETECTED
+                        finalResult.innerHTML = `<span class="text-red-500 uppercase">🚨 ALARM DEACTIVATED</span><br><span class="text-xs text-gray-400 mt-2 block">"${keyword}" found in data.</span>`;
+                        document.body.style.backgroundColor = "#1a0505";
+                    } else {
+                        // NO SNOW DAY
+                        finalResult.innerHTML = `<span class="text-green-500 uppercase">☀️ ALARM ARMED</span><br><span class="text-xs text-gray-400 mt-2 block">No matching keywords found.</span>`;
+                        document.body.style.backgroundColor = "#051a05";
                     }
-                }, 1500);
-            }, 1000);
+                }, 1000);
+
+            } catch (err) {
+                statusText.innerText = "Connection Failed";
+                finalResult.innerHTML = `<span class="text-orange-500 uppercase">Server Blocked</span><br><span class="text-[10px] text-gray-500">Site has anti-bot protection.</span>`;
+                document.getElementById('status-spinner').classList.add('hidden');
+            }
         }
     </script>
 </body>
